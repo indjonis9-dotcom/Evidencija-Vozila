@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient'
 import FormaVozila from './FormaVozila'
+import FormaFirma from './FormaFirma'
+import FormaNovoVozilo from './FormaNovoVozilo'
 import Izvestaj from './Izvestaj'
 import { nadjiKorisnika, kreirajSmenu, zavrsiSmenu } from './smenaHelper'
 
 export default function Pocetni({ session, onOdjava }) {
   const [mod, setMod] = useState(null)
   const [prikaziFormu, setPrikaziFormu] = useState(false)
+  const [prikaziFormuFirme, setPrikaziFormuFirme] = useState(false)
+  const [prikaziFormuVozila, setPrikaziFormuVozila] = useState(false)
   const [popis, setPopis] = useState([])
   const [greska, setGreska] = useState(null)
   const [korisnik, setKorisnik] = useState(null)
@@ -106,6 +110,25 @@ export default function Pocetni({ session, onOdjava }) {
           <button disabled style={{ display: 'block', width: '100%', padding: 20, fontSize: 18, backgroundColor: '#ccc', color: '#666', border: 'none', borderRadius: 8, cursor: 'not-allowed' }}>
             🟢 Evidencija (Ulaz/Izlaz) — uskoro
           </button>
+
+          <hr style={{ margin: '30px 0' }} />
+          <h3>Baza podataka</h3>
+          <p style={{ fontSize: 14, color: '#666' }}>Dodaj novu firmu ili vozilo u bazu (opciono):</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button onClick={() => setPrikaziFormuFirme(!prikaziFormuFirme)} style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+              ➕ Dodaj firmu
+            </button>
+            <button onClick={() => setPrikaziFormuVozila(!prikaziFormuVozila)} style={{ padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+              ➕ Dodaj vozilo
+            </button>
+          </div>
+
+          {prikaziFormuFirme && (
+            <FormaFirma onSacuvano={() => setPrikaziFormuFirme(false)} onOtkazi={() => setPrikaziFormuFirme(false)} />
+          )}
+          {prikaziFormuVozila && (
+            <FormaNovoVozilo onSacuvano={() => setPrikaziFormuVozila(false)} onOtkazi={() => setPrikaziFormuVozila(false)} />
+          )}
         </div>
       )}
 
@@ -124,7 +147,7 @@ export default function Pocetni({ session, onOdjava }) {
 
           {!prikaziFormu && (
             <button onClick={() => setPrikaziFormu(true)} style={{ display: 'block', width: '100%', padding: 15, fontSize: 16, backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', marginBottom: 20 }}>
-              ➕ Dodaj vozilo
+              ➕ Dodaj vozilo u popis
             </button>
           )}
 

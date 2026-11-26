@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import emailjs from '@emailjs/browser'
 
 export default function Izvestaj({ smena, popis, korisnik, onZatvori }) {
   const [email, setEmail] = useState('')
@@ -10,44 +11,60 @@ export default function Izvestaj({ smena, popis, korisnik, onZatvori }) {
   }
 
   const handlePosaljiEmail = async () => {
+    // 1. Provera email adrese
     if (!email.trim()) {
-      setPoruka('Unesi email adresu.')
+      setPoruka('❌ Unesi email adresu.')
       return
     }
+
+    // 2. Provera da li ima vozila
+    if (!popis || popis.length === 0) {
+      setPoruka('❌ Nema vozila u izveštaju.')
+      return
+    }
+
     setSaljem(true)
     setPoruka(null)
 
     try {
-      // Dinamički uvoz EmailJS (da ne opterećuje app ako se ne koristi)
-      const emailjs = await import('@emailjs/browser')
-
-      // Napravi tekst izveštaja
-      const tekst = popis.map(v =>
-        `${v.tablica} | ${v.tip_vozila} | ${v.firme?.naziv || '-'} | ${v.kategorija}${v.napomena ? ' | ' + v.napomena : ''}`
+      // 3. Napravi tekst izveštaja
+      const tekst = popis.map((v, i) =>
+        `${i + 1}. ${v.tablica} | ${v.tip_vozila} | ${v.firme?.naziv || '-'} | ${v.kategorija}${v.napomena ? ' | ' + v.napomena : ''}`
       ).join('\n')
 
+      // 4. Parametri za EmailJS
+      const parametri = {
+        to_email: email.trim(),
+        datum: new Date(smena.vreme_pocetka).toLocaleDateString('sr-RS'),
+        portir: korisnik?.ime || 'Nepoznat',
+        broj_vozila: popis.length,
+        lista: tekst,
+      }
+
+      // 5. Debug — vidi šta se šalje
+      console.log('EmailJS parametri:', parametri)
+
+      // 6. Pošalji
       const rezultat = await emailjs.send(
         'service_dwa4e2l',
         'template_ylx64zh',
-        {
-          to_email: email,
-          datum: new Date(smena.vreme_pocetka).toLocaleDateString('sr-RS'),
-          portir: korisnik?.ime || 'Nepoznat',
-          broj_vozila: popis.length,
-          lista: tekst,
-        },
+        parametri,
         'g65RsfyWa79puX1Ea'
       )
+
+      console.log('EmailJS odgovor:', rezultat)
 
       if (rezultat.status === 200) {
         setPoruka('✅ Email je poslat!')
         setEmail('')
       } else {
-        setPoruka('Greška: ' + rezultat.text)
+        setPoruka('⚠️ Nešto nije u redu: ' + JSON.stringify(rezultat))
       }
     } catch (e) {
-      setPoruka('Greška: ' + e.message)
+      console.error('EmailJS greška:', e)
+      setPoruka('❌ Greška: ' + (e.text || e.message || JSON.stringify(e)))
     }
+
     setSaljem(false)
   }
 
@@ -90,7 +107,7 @@ export default function Izvestaj({ smena, popis, korisnik, onZatvori }) {
         </table>
       </div>
 
-      {/* Dugmad — ne štampaju se */}
+      {/* Dugmad */}
       <div style={{ marginTop: 30, display: 'flex', gap: 10, flexWrap: 'wrap' }} className="no-print">
         <button onClick={handleStampa} style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
           🖨️ Štampaj
