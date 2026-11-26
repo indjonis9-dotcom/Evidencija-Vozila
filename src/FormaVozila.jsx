@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from './supabaseClient'
+import PretragaFirmi from './PretragaFirmi'
 
 export default function FormaVozila({ smenaId, portirId, onSacuvano, onOtkazi }) {
   const [tablica, setTablica] = useState('')
@@ -7,18 +8,8 @@ export default function FormaVozila({ smenaId, portirId, onSacuvano, onOtkazi })
   const [tipVozila, setTipVozila] = useState('')
   const [kategorija, setKategorija] = useState('mesecni')
   const [napomena, setNapomena] = useState('')
-  const [firme, setFirme] = useState([])
   const [greska, setGreska] = useState(null)
   const [cuvam, setCuvam] = useState(false)
-
-  useEffect(() => {
-    async function ucitajFirme() {
-      const { data, error } = await supabase.from('firme').select('id, naziv').order('naziv')
-      if (error) setGreska(error.message)
-      else setFirme(data || [])
-    }
-    ucitajFirme()
-  }, [])
 
   const handleSacuvaj = async (e) => {
     e.preventDefault()
@@ -34,7 +25,7 @@ export default function FormaVozila({ smenaId, portirId, onSacuvano, onOtkazi })
     // 1. Proveri da li vozilo postoji u bazi vozila
     const { data: postojeceVozilo } = await supabase
       .from('vozila')
-      .select('id, firma_id, tip_vozila, kategorija')
+      .select('id')
       .eq('tablica', tablicaUpper)
       .maybeSingle()
 
@@ -92,10 +83,7 @@ export default function FormaVozila({ smenaId, portirId, onSacuvano, onOtkazi })
 
       <div style={{ marginBottom: 10 }}>
         <label>Firma</label>
-        <select value={firmaId} onChange={(e) => setFirmaId(e.target.value)} style={{ width: '100%', padding: 8, marginTop: 4 }}>
-          <option value="">— izaberi firmu —</option>
-          {firme.map(f => <option key={f.id} value={f.id}>{f.naziv}</option>)}
-        </select>
+        <PretragaFirmi vrednost={firmaId} onPromena={setFirmaId} />
       </div>
 
       <div style={{ marginBottom: 10 }}>
