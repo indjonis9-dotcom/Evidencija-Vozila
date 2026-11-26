@@ -4,6 +4,7 @@ import FormaVozila from './FormaVozila'
 import FormaFirma from './FormaFirma'
 import FormaNovoVozilo from './FormaNovoVozilo'
 import Izvestaj from './Izvestaj'
+import Prekoracenja from './Prekoracenja'
 import { nadjiKorisnika, kreirajSmenu, zavrsiSmenu } from './smenaHelper'
 
 export default function Pocetni({ session, onOdjava }) {
@@ -11,6 +12,7 @@ export default function Pocetni({ session, onOdjava }) {
   const [prikaziFormu, setPrikaziFormu] = useState(false)
   const [prikaziFormuFirme, setPrikaziFormuFirme] = useState(false)
   const [prikaziFormuVozila, setPrikaziFormuVozila] = useState(false)
+  const [prikaziPrekoracenja, setPrikaziPrekoracenja] = useState(false)
   const [popis, setPopis] = useState([])
   const [greska, setGreska] = useState(null)
   const [korisnik, setKorisnik] = useState(null)
@@ -88,6 +90,10 @@ export default function Pocetni({ session, onOdjava }) {
     return <Izvestaj smena={smena} popis={popis} korisnik={korisnik} onZatvori={handleZatvoriIzvestaj} />
   }
 
+  if (prikaziPrekoracenja) {
+    return <Prekoracenja onZatvori={() => setPrikaziPrekoracenja(false)} />
+  }
+
   return (
     <div style={{ padding: 20, maxWidth: 600, margin: 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -120,6 +126,9 @@ export default function Pocetni({ session, onOdjava }) {
             </button>
             <button onClick={() => setPrikaziFormuVozila(!prikaziFormuVozila)} style={{ padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
               ➕ Dodaj vozilo
+            </button>
+            <button onClick={() => setPrikaziPrekoracenja(true)} style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+              📊 Proveri prekoračenja
             </button>
           </div>
 
