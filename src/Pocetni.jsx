@@ -6,15 +6,17 @@ import FormaNovoVozilo from './FormaNovoVozilo'
 import FormaUlazIzlaz from './FormaUlazIzlaz'
 import Izvestaj from './Izvestaj'
 import Prekoracenja from './Prekoracenja'
+import AdminPanel from './AdminPanel'
 import { nadjiKorisnika, kreirajSmenu, zavrsiSmenu } from './smenaHelper'
 
 export default function Pocetni({ session, onOdjava }) {
   const [mod, setMod] = useState(null)
-  const [podmod, setPodmod] = useState(null) // 'ulaz' ili 'izlaz'
+  const [podmod, setPodmod] = useState(null)
   const [prikaziFormu, setPrikaziFormu] = useState(false)
   const [prikaziFormuFirme, setPrikaziFormuFirme] = useState(false)
   const [prikaziFormuVozila, setPrikaziFormuVozila] = useState(false)
   const [prikaziPrekoracenja, setPrikaziPrekoracenja] = useState(false)
+  const [prikaziAdmin, setPrikaziAdmin] = useState(false)
   const [popis, setPopis] = useState([])
   const [ulaziIzlazi, setUlaziIzlazi] = useState([])
   const [greska, setGreska] = useState(null)
@@ -22,6 +24,8 @@ export default function Pocetni({ session, onOdjava }) {
   const [smena, setSmena] = useState(null)
   const [ucitavam, setUcitavam] = useState(false)
   const [prikaziIzvestaj, setPrikaziIzvestaj] = useState(false)
+
+  const jeAdmin = korisnik?.uloga === 'admin'
 
   useEffect(() => {
     async function ucitaj() {
@@ -38,7 +42,6 @@ export default function Pocetni({ session, onOdjava }) {
   const ucitajPodatke = async (smenaId) => {
     if (!smenaId) return
 
-    // Popis
     const { data: popisData, error: errPopis } = await supabase
       .from('evidencija')
       .select('*, firme(naziv)')
@@ -49,7 +52,6 @@ export default function Pocetni({ session, onOdjava }) {
     if (errPopis) setGreska(errPopis.message)
     else setPopis(popisData || [])
 
-    // Ulazi i izlazi
     const { data: uiData, error: errUI } = await supabase
       .from('evidencija')
       .select('*, firme(naziv)')
@@ -108,7 +110,27 @@ export default function Pocetni({ session, onOdjava }) {
   }
 
   if (prikaziPrekoracenja) {
+    if (!jeAdmin) {
+      return (
+        <div style={{ padding: 20 }}>
+          <p style={{ color: 'red' }}>⛔ Nemate pristup ovoj stranici.</p>
+          <button onClick={() => setPrikaziPrekoracenja(false)}>Nazad</button>
+        </div>
+      )
+    }
     return <Prekoracenja onZatvori={() => setPrikaziPrekoracenja(false)} />
+  }
+
+  if (prikaziAdmin) {
+    if (!jeAdmin) {
+      return (
+        <div style={{ padding: 20 }}>
+          <p style={{ color: 'red' }}>⛔ Nemate pristup ovoj stranici.</p>
+          <button onClick={() => setPrikaziAdmin(false)}>Nazad</button>
+        </div>
+      )
+    }
+    return <AdminPanel onZatvori={() => setPrikaziAdmin(false)} />
   }
 
   return (
@@ -124,7 +146,6 @@ export default function Pocetni({ session, onOdjava }) {
       <hr />
       {greska && <p style={{ color: 'red' }}>{greska}</p>}
 
-      {/* Ako nema smene — izbor moda */}
       {!smena && (
         <div style={{ marginTop: 30 }}>
           <h2>Izaberi mod rada</h2>
@@ -142,9 +163,16 @@ export default function Pocetni({ session, onOdjava }) {
             <button onClick={() => setPrikaziFormuVozila(!prikaziFormuVozila)} style={{ padding: '10px 20px', backgroundColor: '#16a34a', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
               ➕ Dodaj vozilo
             </button>
-            <button onClick={() => setPrikaziPrekoracenja(true)} style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
-              📊 Proveri prekoračenja
-            </button>
+            {jeAdmin && (
+              <button onClick={() => setPrikaziPrekoracenja(true)} style={{ padding: '10px 20px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+                📊 Proveri prekoračenja
+              </button>
+            )}
+            {jeAdmin && (
+              <button onClick={() => setPrikaziAdmin(true)} style={{ padding: '10px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: 6, cursor: 'pointer' }}>
+                ⚙️ Admin panel
+              </button>
+            )}
           </div>
 
           {prikaziFormuFirme && (
@@ -156,7 +184,6 @@ export default function Pocetni({ session, onOdjava }) {
         </div>
       )}
 
-      {/* Ako ima smene — prikaz modova i formi */}
       {smena && (
         <div style={{ marginTop: 30 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
@@ -170,7 +197,6 @@ export default function Pocetni({ session, onOdjava }) {
             Smena počela: {new Date(smena.vreme_pocetka).toLocaleString('sr-RS')}
           </p>
 
-          {/* Izbor moda */}
           {!mod && (
             <div style={{ marginBottom: 20 }}>
               <h3>Izaberi šta radiš:</h3>
@@ -185,7 +211,6 @@ export default function Pocetni({ session, onOdjava }) {
             </div>
           )}
 
-          {/* MOD: POPIS */}
           {mod === 'popis' && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -219,7 +244,6 @@ export default function Pocetni({ session, onOdjava }) {
             </div>
           )}
 
-          {/* MOD: EVIDENCIJA */}
           {mod === 'evidencija' && (
             <div style={{ marginBottom: 20 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
